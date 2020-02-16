@@ -11,6 +11,7 @@ import sklearn.metrics
 
 import torch
 from torch.utils.data import DataLoader
+import ipdb
 
 def parse_args():
     """
@@ -26,7 +27,7 @@ def parse_args():
     parser.add_argument('--epochs', type=int, default=14, metavar='N',
                         help='number of epochs to train (default: 14)')
     parser.add_argument('--lr', type=float, default=1e-3, metavar='LR',
-                        help='learning rate (default: 1.0)')
+                        help='learning rate (default: .001)')
     parser.add_argument('--gamma', type=float, default=0.7, metavar='M',
                         help='Learning rate step gamma (default: 0.7)')
     parser.add_argument('--no-cuda', action='store_true', default=False,

@@ -7,11 +7,14 @@ import imageio
 import numpy as np
 import os
 import xml.etree.ElementTree as ET
+from skimage import io, transform
+from scipy import misc
 
 import torch
 import torch.nn
 from PIL import Image
 from torch.utils.data import Dataset
+import ipdb
 
 
 class VOCDataset(Dataset):
@@ -22,7 +25,7 @@ class VOCDataset(Dataset):
     for i in range(len(CLASS_NAMES)):
         INV_CLASS[CLASS_NAMES[i]] = i
 
-    def __init__(self, split, size, data_dir='VOCdevkit/VOC2007/'):
+    def __init__(self, split, size, data_dir='../VOCdevkit/VOC2007/'):
         super().__init__()
         self.split = split
         self.data_dir = data_dir
@@ -32,8 +35,7 @@ class VOCDataset(Dataset):
 
         split_file = os.path.join(data_dir, 'ImageSets/Main', split + '.txt')
         with open(split_file) as fp:
-            self.index_list = [line.strip() for line in fp]
-
+            self.index_list = [line.strip() for line in fp]     #index_list is stores the index or basically the names of the images
         self.anno_list = self.preload_anno()
 
     @classmethod
@@ -56,6 +58,16 @@ class VOCDataset(Dataset):
         for index in self.index_list:
             fpath = os.path.join(self.ann_dir, index + '.xml')
             tree = ET.parse(fpath)
+            root = tree.getroot()
+            labels = np.zeros(len(VOCDataset.CLASS_NAMES))
+            weights = np.zeros(len(VOCDataset.CLASS_NAMES))
+            for obj in root.findall('object'):
+                naam = obj.find('name').text
+                difficulty = obj.find('difficult').text
+                labels[VOCDataset.get_class_index(naam)] = 1
+                if(difficulty=='0'):
+                    weights[VOCDataset.get_class_index(naam)]+=1
+            label_list.append([labels,weights])            
             # TODO: insert your code here, preload labels
 
         return label_list
@@ -70,10 +82,16 @@ class VOCDataset(Dataset):
         """
         findex = self.index_list[index]
         fpath = os.path.join(self.img_dir, findex + '.jpg')
+        newsize = (224,224) 
         # TODO: insert your code here. hint: read image, find the labels and weight.
-
+        img = io.imread(fpath)
+        # img = img.resize(newsize)
+        img = misc.imresize(img,newsize)
+        lab_vec = self.anno_list[index][0]
+        wgt_vec = self.anno_list[index][1]
         image = torch.FloatTensor(img)
         label = torch.FloatTensor(lab_vec)
         wgt = torch.FloatTensor(wgt_vec)
+
         return image, label, wgt
 

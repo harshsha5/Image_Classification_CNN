@@ -9,6 +9,7 @@ import torch
 import utils
 from q0_hello_mnist import SimpleCNN
 from voc_dataset import VOCDataset
+import ipdb
 
 
 def main():
@@ -30,6 +31,7 @@ def main():
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=args.gamma)
     cnt = 0
     for epoch in range(args.epochs):
+        ipdb.set_trace()
         for batch_idx, (data, target, wgt) in enumerate(train_loader):
             # Get a batch of data
             data, target, wgt = data.to(device), target.to(device), wgt.to(device)
