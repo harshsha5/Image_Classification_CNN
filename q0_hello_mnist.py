@@ -32,7 +32,9 @@ class SimpleCNN(nn.Module):
         self.pool2 = nn.AvgPool2d(2, 2)
 
         # TODO: q0.1 Modify the code here
-        self.flat_dim = 64*7*7
+        # self.flat_dim = 64*7*7            #TO BE CHANGED BASED ON THE IMAGE SIZE
+        # self.flat_dim = 64*(inp_size/4)*(inp_size/4)
+        self.flat_dim = 64*64*64
         # chain your layers by Sequential -- another way
         # TODO: Modify the code here
         self.fc1 = nn.Sequential(*get_fc(self.flat_dim, 128, 'relu'))

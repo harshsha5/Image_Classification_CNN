@@ -93,7 +93,7 @@ def eval_dataset_map(model, device, test_loader):
     """
     Evaluate the model with the given dataset
     Args:
-         model (keras.Model): model to be evaluated
+         model (Model): model to be evaluated
          dataset (tf.data.Dataset): evaluation dataset
     Returns:
          AP (list): Average Precision for all classes

@@ -59,16 +59,16 @@ class VOCDataset(Dataset):
             fpath = os.path.join(self.ann_dir, index + '.xml')
             tree = ET.parse(fpath)
             root = tree.getroot()
+            # TODO: insert your code here, preload labels
             labels = np.zeros(len(VOCDataset.CLASS_NAMES))
             weights = np.zeros(len(VOCDataset.CLASS_NAMES))
             for obj in root.findall('object'):
                 naam = obj.find('name').text
                 difficulty = obj.find('difficult').text
-                labels[VOCDataset.get_class_index(naam)] = 1
+                labels[VOCDataset.get_class_index(naam)] += 1
                 if(difficulty=='0'):
-                    weights[VOCDataset.get_class_index(naam)]+=1
+                    weights[VOCDataset.get_class_index(naam)]= 1
             label_list.append([labels,weights])            
-            # TODO: insert your code here, preload labels
 
         return label_list
 
@@ -82,14 +82,14 @@ class VOCDataset(Dataset):
         """
         findex = self.index_list[index]
         fpath = os.path.join(self.img_dir, findex + '.jpg')
-        newsize = (224,224) 
+        newsize = (256,256) 
         # TODO: insert your code here. hint: read image, find the labels and weight.
         img = io.imread(fpath)
-        # img = img.resize(newsize)
         img = misc.imresize(img,newsize)
         lab_vec = self.anno_list[index][0]
         wgt_vec = self.anno_list[index][1]
-        image = torch.FloatTensor(img)
+        img = torch.FloatTensor(img)
+        image = img.permute(2, 0, 1)
         label = torch.FloatTensor(lab_vec)
         wgt = torch.FloatTensor(wgt_vec)
 
