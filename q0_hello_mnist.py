@@ -38,7 +38,7 @@ class SimpleCNN(nn.Module):
         # chain your layers by Sequential -- another way
         # TODO: Modify the code here
         self.fc1 = nn.Sequential(*get_fc(self.flat_dim, 128, 'relu'))
-        self.fc2 = nn.Sequential(*get_fc(128, num_classes, 'softmax'))
+        self.fc2 = nn.Sequential(*get_fc(128, num_classes, 'none'))      #Note: Change to None/softmax accordingly
 
     def forward(self, x):
         """

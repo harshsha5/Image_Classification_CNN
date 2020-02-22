@@ -13,6 +13,7 @@ import ipdb
 
 import matplotlib.pyplot as plt
 import torchvision.transforms as transforms
+import torch.nn.functional as F
 
 def visualize_data_sample(tensor_img):
     tensor_img = tensor_img.int()
@@ -46,7 +47,7 @@ def main():
             output = model(data)
             # Calculate the loss
             # TODO: your loss for multi-label clf?
-            loss = 0
+            loss = F.multilabel_soft_margin_loss(output,target)
             # Calculate gradient w.r.t the loss
             loss.backward()
             # Optimizer takes one step
