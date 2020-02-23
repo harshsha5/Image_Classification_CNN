@@ -18,11 +18,19 @@ import torch.nn.functional as F
 
 from tensorboardX import SummaryWriter
 import time
+from torchvision.utils import make_grid
 
 def visualize_data_sample(tensor_img):
     tensor_img = tensor_img.int()
     plt.imshow(tensor_img.permute(1, 2, 0))
     plt.show()
+
+def visualize_filter(kernels,epoch,path):
+    kernels = kernels - kernels.min()
+    kernels = kernels / kernels.max()
+    img = make_grid(kernels)
+    plt.imshow(img.permute(1, 2, 0))
+    plt.savefig(path+'_'+str(epoch))
 
 def main():
     # TODO:  Initialize your visualizer here!
@@ -41,11 +49,11 @@ def main():
     # Remember: always reuse your code wisely.
     if(int(args.model_to_use)==1):
         model = SimpleCNN(num_classes=len(VOCDataset.CLASS_NAMES), inp_size=64, c_dim=3).to(device)
-        MODEL_SAVE_PATH = "../trained_simpleCNNmodel"
+        MODEL_SAVE_PATH = "../Saved_Models/trained_simpleCNNmodel"
         print("Using SimpleCNN")
     elif(int(args.model_to_use)==2):
         model = CaffeNet(num_classes=len(VOCDataset.CLASS_NAMES), inp_size=64, c_dim=3,dropout_prob=0.5).to(device)
-        MODEL_SAVE_PATH = "../trained_CaffeNet"
+        MODEL_SAVE_PATH = "../Saved_Models/trained_CaffeNet"
         print("Using CaffeNet")
     else:
         print("Select Correct model_to_use")
@@ -59,11 +67,17 @@ def main():
     cnt = 0
 
     #Model Save Code
-    ipdb.set_trace()
     model_save_epochs = np.arange(args.epochs/5,args.epochs,step=args.epochs/5,dtype=int)
     if(model_save_epochs[-1]!=args.epochs):
         model_save_epochs = np.append(model_save_epochs,args.epochs)
     index_model_save_epochs = 0
+
+    #Visualize Filter Code
+    filter_visualization_epochs = np.arange(args.epochs/3,args.epochs,step=args.epochs/3,dtype=int)
+    if(filter_visualization_epochs[-1]!=args.epochs):
+        filter_visualization_epochs = np.append(filter_visualization_epochs,args.epochs)
+    index_filter_visualization_epochs = 0    
+
 
     for epoch in range(args.epochs):
         print("---------------EPOCH: ",epoch+1," ------------------------")
@@ -95,7 +109,7 @@ def main():
         writer.add_scalar('Train/Loss', loss, epoch)
 
         if(model_save_epochs[index_model_save_epochs] == epoch+1):
-            print("Saving Model")
+            print("Saving Model ",epoch+1)
             torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
@@ -104,6 +118,11 @@ def main():
             }, MODEL_SAVE_PATH)
             index_model_save_epochs+=1
 
+        if(filter_visualization_epochs[index_filter_visualization_epochs] == epoch+1):
+            print("Extracting Filter",epoch+1)
+            index_filter_visualization_epochs+=1
+            kernels = model.conv1.weight.detach().clone()
+            visualize_filter(kernels,epoch,MODEL_SAVE_PATH)
 
     # Validation iteration
     # test_loader = utils.get_data_loader('voc', train=False, batch_size=args.test_batch_size, split='test')
