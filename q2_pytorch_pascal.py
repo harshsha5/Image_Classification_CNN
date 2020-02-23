@@ -8,6 +8,7 @@ import torch
 
 import utils
 from q0_hello_mnist import SimpleCNN
+from Caffe_Net import CaffeNet
 from voc_dataset import VOCDataset
 import ipdb
 
@@ -38,13 +39,32 @@ def main():
     # bad idea of use simple CNN, but let's give it a shot!
     # In task 2, 3, 4, you might want to modify this line to be configurable to other models.
     # Remember: always reuse your code wisely.
-    model = SimpleCNN(num_classes=len(VOCDataset.CLASS_NAMES), inp_size=64, c_dim=3).to(device)
+    if(int(args.model_to_use)==1):
+        model = SimpleCNN(num_classes=len(VOCDataset.CLASS_NAMES), inp_size=64, c_dim=3).to(device)
+        MODEL_SAVE_PATH = "../trained_simpleCNNmodel"
+        print("Using SimpleCNN")
+    elif(int(args.model_to_use)==2):
+        model = CaffeNet(num_classes=len(VOCDataset.CLASS_NAMES), inp_size=64, c_dim=3,dropout_prob=0.5).to(device)
+        MODEL_SAVE_PATH = "../trained_CaffeNet"
+        print("Using CaffeNet")
+    else:
+        print("Select Correct model_to_use")
+        raise NotImplementedError
+
     model.train()
     model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=args.gamma)
     cnt = 0
+
+    #Model Save Code
+    ipdb.set_trace()
+    model_save_epochs = np.arange(args.epochs/5,args.epochs,step=args.epochs/5,dtype=int)
+    if(model_save_epochs[-1]!=args.epochs):
+        model_save_epochs = np.append(model_save_epochs,args.epochs)
+    index_model_save_epochs = 0
+
     for epoch in range(args.epochs):
         print("---------------EPOCH: ",epoch+1," ------------------------")
         for batch_idx, (data, target, wgt) in enumerate(train_loader):
@@ -68,20 +88,31 @@ def main():
             # Validation iteration
             if cnt % args.val_every == 0:
                 model.eval()
-                ap, map = utils.eval_dataset_map(model, device, test_loader)
+                # ap, map = utils.eval_dataset_map(model, device, test_loader)
                 model.train()
             cnt += 1
         scheduler.step()
         writer.add_scalar('Train/Loss', loss, epoch)
 
+        if(model_save_epochs[index_model_save_epochs] == epoch+1):
+            print("Saving Model")
+            torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': loss,
+            }, MODEL_SAVE_PATH)
+            index_model_save_epochs+=1
+
+
     # Validation iteration
-    test_loader = utils.get_data_loader('voc', train=False, batch_size=args.test_batch_size, split='test')
-    ap, map = utils.eval_dataset_map(model, device, test_loader)
+    # test_loader = utils.get_data_loader('voc', train=False, batch_size=args.test_batch_size, split='test')
+    # ap, map = utils.eval_dataset_map(model, device, test_loader)
 
     print('----test-----')
-    print(ap)
-    print('mAP: ', map)
-    writer.close()
+    # print(ap)
+    # print('mAP: ', map)
+    # writer.close()
 
 
 
