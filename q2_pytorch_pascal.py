@@ -15,6 +15,9 @@ import matplotlib.pyplot as plt
 import torchvision.transforms as transforms
 import torch.nn.functional as F
 
+from tensorboardX import SummaryWriter
+import time
+
 def visualize_data_sample(tensor_img):
     tensor_img = tensor_img.int()
     plt.imshow(tensor_img.permute(1, 2, 0))
@@ -22,6 +25,10 @@ def visualize_data_sample(tensor_img):
 
 def main():
     # TODO:  Initialize your visualizer here!
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    save_path = "runs/"+timestr+'/'
+    writer = SummaryWriter(save_path)
+
     # TODO: complete your dataloader in voc_dataset.py
     train_loader = utils.get_data_loader('voc', train=True, batch_size=args.batch_size, split='trainval')
     test_loader = utils.get_data_loader('voc', train=False, batch_size=args.test_batch_size, split='test')
@@ -39,6 +46,7 @@ def main():
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=args.gamma)
     cnt = 0
     for epoch in range(args.epochs):
+        print("---------------EPOCH: ",epoch+1," ------------------------")
         for batch_idx, (data, target, wgt) in enumerate(train_loader):
             # Get a batch of data
             data, target, wgt = data.to(device), target.to(device), wgt.to(device)
@@ -64,6 +72,7 @@ def main():
                 model.train()
             cnt += 1
         scheduler.step()
+        writer.add_scalar('Train/Loss', loss, epoch)
 
     # Validation iteration
     test_loader = utils.get_data_loader('voc', train=False, batch_size=args.test_batch_size, split='test')
@@ -72,6 +81,8 @@ def main():
     print('----test-----')
     print(ap)
     print('mAP: ', map)
+    writer.close()
+
 
 
 if __name__ == '__main__':

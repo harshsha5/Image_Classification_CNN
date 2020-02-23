@@ -11,6 +11,7 @@ import sklearn.metrics
 
 import torch
 from torch.utils.data import DataLoader
+import torch
 import ipdb
 
 def parse_args():
@@ -100,9 +101,22 @@ def eval_dataset_map(model, device, test_loader):
          MAP (float): mean average precision
     """
     with torch.no_grad():
+        count = 0
         for data, target, wgt in test_loader:
             ## TODO insert your code here
-            pass
+            data, target, wgt = data.to(device), target.to(device), wgt.to(device)
+            if(count==0):
+                gt = np.clip(target, 0, 1).numpy()
+                pred = torch.sigmoid(model(data)).numpy() #Use sigmoid here, as each output tensor would be a logit whose probability we need. The probability might
+                                              #not sum to 1 as this is multi-label classification and each probab is independent of other classes
+                valid = wgt.numpy()
+            else:
+                gt = np.hstack((gt,np.clip(target, 0, 1).numpy()))
+                pred = np.hstack((pred,torch.sigmoid(model(data).numpy())))
+                valid = np.hstack((valid,wgt.numpy()))
+
+            count+=1
+
     AP = compute_ap(gt, pred, valid)
 
     mAP = np.mean(AP)

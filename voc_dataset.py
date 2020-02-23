@@ -25,7 +25,7 @@ class VOCDataset(Dataset):
     for i in range(len(CLASS_NAMES)):
         INV_CLASS[CLASS_NAMES[i]] = i
 
-    def __init__(self, split, size, data_dir='../VOCdevkit/VOC2007/'):
+    def __init__(self, split, size, data_dir='../VOCdevkit_Toy/VOC2007/'):
         super().__init__()
         self.split = split
         self.data_dir = data_dir
