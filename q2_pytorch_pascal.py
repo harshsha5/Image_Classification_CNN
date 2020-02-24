@@ -21,6 +21,7 @@ from tensorboardX import SummaryWriter
 import time
 from torchvision.utils import make_grid
 from torchvision import models
+import copy
 
 def visualize_data_sample(tensor_img):
     tensor_img = tensor_img.int()
@@ -34,6 +35,10 @@ def visualize_filter(kernels,epoch,path):
     img = make_grid(kernels)
     plt.imshow(img.permute(1, 2, 0))
     plt.savefig(path+'_'+str(epoch))
+
+def get_lr(optimizer):
+    for param_group in optimizer.param_groups:
+        return param_group['lr']
 
 def main():
     # TODO:  Initialize your visualizer here!
@@ -59,7 +64,7 @@ def main():
         MODEL_SAVE_PATH = "../Saved_Models/trained_CaffeNet"
         print("Using CaffeNet")
     elif(int(args.model_to_use)==3):
-        model = models.resnet18(pretrained=True)
+        model = models.resnet18(pretrained=False)
         final_layer_in_features = model.fc.in_features
         model.fc = nn.Linear(final_layer_in_features, len(VOCDataset.CLASS_NAMES))
         model = model.to(device)
@@ -76,21 +81,16 @@ def main():
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=args.gamma)
     cnt = 0
 
-    #Model Save Code
-    model_save_epochs = np.arange(args.epochs/5,args.epochs,step=args.epochs/5,dtype=int)
-    if(model_save_epochs[-1]!=args.epochs):
-        model_save_epochs = np.append(model_save_epochs,args.epochs)
+    #Model Save Code        #Get 5 checkpoints
+    model_save_epochs = np.linspace(0,args.epochs-1, num=5, endpoint=True,dtype=int)
     index_model_save_epochs = 0
 
-    #Visualize Filter Code
-    filter_visualization_epochs = np.arange(args.epochs/3,args.epochs,step=args.epochs/3,dtype=int)
-    if(filter_visualization_epochs[-1]!=args.epochs):
-        filter_visualization_epochs = np.append(filter_visualization_epochs,args.epochs)
+    #Visualize Filter Code          #Visualize at 3 different epochs
+    filter_visualization_epochs = np.linspace(0,args.epochs-1, num=3, endpoint=True,dtype=int)
     index_filter_visualization_epochs = 0    
 
-
     for epoch in range(args.epochs):
-        print("---------------EPOCH: ",epoch+1," ------------------------")
+        print("---------------EPOCH: ",epoch," ------------------------")
         for batch_idx, (data, target, wgt) in enumerate(train_loader):
             # Get a batch of data
             data, target, wgt = data.to(device), target.to(device), wgt.to(device)
@@ -109,17 +109,20 @@ def main():
                 # todo: add your visualization code
                 print('Train Epoch: {} [{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                     epoch, cnt, 100. * batch_idx / len(train_loader), loss.item()))
+                writer.add_scalar('Train/Loss', loss, cnt)
+                current_lr = get_lr(copy.deepcopy(optimizer))
+                writer.add_scalar('lr', current_lr, cnt)
             # Validation iteration
             if cnt % args.val_every == 0:
                 model.eval()
                 # ap, map = utils.eval_dataset_map(model, device, test_loader)
+                # writer.add_scalar('MAP', map, cnt)
                 model.train()
             cnt += 1
         scheduler.step()
-        writer.add_scalar('Train/Loss', loss, epoch)
 
-        if(model_save_epochs[index_model_save_epochs] == epoch+1):
-            print("Saving Model ",epoch+1)
+        if(model_save_epochs[index_model_save_epochs] == epoch):
+            print("Saving Model ",epoch)
             torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
@@ -128,11 +131,12 @@ def main():
             }, MODEL_SAVE_PATH)
             index_model_save_epochs+=1
 
-        if(filter_visualization_epochs[index_filter_visualization_epochs] == epoch+1):
-            print("Extracting Filter",epoch+1)
+        if(filter_visualization_epochs[index_filter_visualization_epochs] == epoch):
+            print("Extracting Filter",epoch)
             index_filter_visualization_epochs+=1
             kernels = model.conv1.weight.detach().clone()
             visualize_filter(kernels,epoch,MODEL_SAVE_PATH)
+            writer.add_image('Train_Images_'+str(epoch)+'_1', data[0])            #Uncomment for ResNet Question
 
     # Validation iteration
     # test_loader = utils.get_data_loader('voc', train=False, batch_size=args.test_batch_size, split='test')
