@@ -5,6 +5,7 @@ from __future__ import print_function
 
 import numpy as np
 import torch
+import torch.nn as nn
 
 import utils
 from q0_hello_mnist import SimpleCNN
@@ -19,6 +20,7 @@ import torch.nn.functional as F
 from tensorboardX import SummaryWriter
 import time
 from torchvision.utils import make_grid
+from torchvision import models
 
 def visualize_data_sample(tensor_img):
     tensor_img = tensor_img.int()
@@ -26,6 +28,7 @@ def visualize_data_sample(tensor_img):
     plt.show()
 
 def visualize_filter(kernels,epoch,path):
+    #Referenced from https://discuss.pytorch.org/t/visualize-feature-map/29597/6
     kernels = kernels - kernels.min()
     kernels = kernels / kernels.max()
     img = make_grid(kernels)
@@ -55,6 +58,13 @@ def main():
         model = CaffeNet(num_classes=len(VOCDataset.CLASS_NAMES), inp_size=64, c_dim=3,dropout_prob=0.5).to(device)
         MODEL_SAVE_PATH = "../Saved_Models/trained_CaffeNet"
         print("Using CaffeNet")
+    elif(int(args.model_to_use)==3):
+        model = models.resnet18(pretrained=True)
+        final_layer_in_features = model.fc.in_features
+        model.fc = nn.Linear(final_layer_in_features, len(VOCDataset.CLASS_NAMES))
+        model = model.to(device)
+        MODEL_SAVE_PATH = "../Saved_Models/trained_Resnet"
+        print("Using ResNet")
     else:
         print("Select Correct model_to_use")
         raise NotImplementedError
