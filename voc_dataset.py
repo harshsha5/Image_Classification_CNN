@@ -61,13 +61,16 @@ class VOCDataset(Dataset):
             root = tree.getroot()
             # TODO: insert your code here, preload labels
             labels = np.zeros(len(VOCDataset.CLASS_NAMES))
-            weights = np.zeros(len(VOCDataset.CLASS_NAMES))
+            weights = np.ones(len(VOCDataset.CLASS_NAMES))
             for obj in root.findall('object'):
                 naam = obj.find('name').text
                 difficulty = obj.find('difficult').text
-                labels[VOCDataset.get_class_index(naam)] += 1
+                labels[VOCDataset.get_class_index(naam)] = 1
                 if(difficulty=='0'):
-                    weights[VOCDataset.get_class_index(naam)]= 1
+                    weights[VOCDataset.get_class_index(naam)] = np.inf
+                else:
+                    weights[VOCDataset.get_class_index(naam)] -= 1
+            weights = np.clip(weights, 0, 1)
             label_list.append([labels,weights])            
 
         return label_list

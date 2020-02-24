@@ -112,9 +112,9 @@ def eval_dataset_map(model, device, test_loader):
                                               #not sum to 1 as this is multi-label classification and each probab is independent of other classes
                 valid = wgt.numpy()
             else:
-                gt = np.hstack((gt,np.clip(target, 0, 1).numpy()))
-                pred = np.hstack((pred,torch.sigmoid(model(data).numpy())))
-                valid = np.hstack((valid,wgt.numpy()))
+                gt = np.vstack((gt,np.clip(target, 0, 1).numpy()))
+                pred = np.vstack((pred,torch.sigmoid(model(data).numpy())))
+                valid = np.vstack((valid,wgt.numpy()))
 
             count+=1
 

@@ -99,7 +99,7 @@ def main():
             output = model(data)
             # Calculate the loss
             # TODO: your loss for multi-label clf?
-            loss = F.multilabel_soft_margin_loss(output,target)
+            loss = F.multilabel_soft_margin_loss(output,wgt*target)
             # Calculate gradient w.r.t the loss
             loss.backward()
             # Optimizer takes one step
@@ -115,8 +115,8 @@ def main():
             # Validation iteration
             if cnt % args.val_every == 0:
                 model.eval()
-                # ap, map = utils.eval_dataset_map(model, device, test_loader)
-                # writer.add_scalar('MAP', map, cnt)
+                ap, map = utils.eval_dataset_map(model, device, test_loader)
+                writer.add_scalar('MAP', map, cnt)
                 model.train()
             cnt += 1
         scheduler.step()
@@ -131,7 +131,7 @@ def main():
             }, MODEL_SAVE_PATH)
             index_model_save_epochs+=1
 
-        if(filter_visualization_epochs[index_filter_visualization_epochs] == epoch):
+        if(filter_visualization_epochs[index_filter_visualization_epochs] == epoch):        #Filters are only needed for CaffeNet so can be commented for Resnet and SimpleCNN
             print("Extracting Filter",epoch)
             index_filter_visualization_epochs+=1
             kernels = model.conv1.weight.detach().clone()
