@@ -48,10 +48,10 @@ def parse_args():
     return args, device
 
 
-def get_data_loader(name='voc', train=True, batch_size=64, split='train'):
+def get_data_loader(name='voc', train=True, batch_size=64, split='train', model_to_use=1):
     if name == 'voc':
         from voc_dataset import VOCDataset
-        dataset = VOCDataset(split, 64)
+        dataset = VOCDataset(split, 64, model_to_use)
     else:
         raise NotImplementedError
 

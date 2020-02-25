@@ -47,8 +47,8 @@ def main():
     writer = SummaryWriter(save_path)
 
     # TODO: complete your dataloader in voc_dataset.py
-    train_loader = utils.get_data_loader('voc', train=True, batch_size=args.batch_size, split='trainval')
-    test_loader = utils.get_data_loader('voc', train=False, batch_size=args.test_batch_size, split='test')
+    train_loader = utils.get_data_loader('voc', train=True, batch_size=args.batch_size, split='trainval',model_to_use = int(args.model_to_use))
+    test_loader = utils.get_data_loader('voc', train=False, batch_size=args.test_batch_size, split='test',model_to_use = int(args.model_to_use))
 
     # 2. define the model, and optimizer.
     # TODO: modify your model here!
@@ -94,6 +94,7 @@ def main():
         for batch_idx, (data, target, wgt) in enumerate(train_loader):
             # Get a batch of data
             data, target, wgt = data.to(device), target.to(device), wgt.to(device)
+            # visualize_data_sample(data[0])
             optimizer.zero_grad()
             # Forward pass
             output = model(data)
@@ -139,13 +140,13 @@ def main():
             writer.add_image('Train_Images_'+str(epoch)+'_1', data[0])            #Uncomment for ResNet Question
 
     # Validation iteration
-    # test_loader = utils.get_data_loader('voc', train=False, batch_size=args.test_batch_size, split='test')
-    # ap, map = utils.eval_dataset_map(model, device, test_loader)
+    test_loader = utils.get_data_loader('voc', train=False, batch_size=args.test_batch_size, split='test')
+    ap, map = utils.eval_dataset_map(model, device, test_loader)
 
     print('----test-----')
-    # print(ap)
-    # print('mAP: ', map)
-    # writer.close()
+    print(ap)
+    print('mAP: ', map)
+    writer.close()
 
 
 
