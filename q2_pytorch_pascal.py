@@ -68,7 +68,15 @@ def main():
         final_layer_in_features = model.fc.in_features
         model.fc = nn.Linear(final_layer_in_features, len(VOCDataset.CLASS_NAMES))
         model = model.to(device)
-        MODEL_SAVE_PATH = "../Saved_Models/trained_Resnet"
+        MODEL_SAVE_PATH = "../Saved_Models/trained_Resnet_no_pretrain"
+        print("Using ResNet")
+    elif(int(args.model_to_use)==4):
+        model = models.resnet18(pretrained=True)
+        final_layer_in_features = model.fc.in_features
+        model.fc = nn.Linear(final_layer_in_features, len(VOCDataset.CLASS_NAMES))
+        model.fc.weight = nn.Parameter(2*torch.rand(model.fc.weight.shape)-1)   #This ensures that the last layer gets randomly allotted weights in the range [-1,1]
+        model = model.to(device)
+        MODEL_SAVE_PATH = "../Saved_Models/trained_Resnet_pretrained"
         print("Using ResNet")
     else:
         print("Select Correct model_to_use")
@@ -116,8 +124,9 @@ def main():
             # Validation iteration
             if cnt % args.val_every == 0:
                 model.eval()
-                ap, map = utils.eval_dataset_map(model, device, test_loader)
+                ap, map, avg_test_loss = utils.eval_dataset_map(model, device, test_loader)
                 writer.add_scalar('MAP', map, cnt)
+                writer.add_scalar('Average_Test_Loss', avg_test_loss, cnt)
                 model.train()
             cnt += 1
         scheduler.step()
@@ -141,11 +150,12 @@ def main():
 
     # Validation iteration
     test_loader = utils.get_data_loader('voc', train=False, batch_size=args.test_batch_size, split='test')
-    ap, map = utils.eval_dataset_map(model, device, test_loader)
+    ap, map, avg_test_loss= utils.eval_dataset_map(model, device, test_loader)
 
     print('----test-----')
     print(ap)
     print('mAP: ', map)
+    print('Average_Test_Loss: ', avg_test_loss)
     writer.close()
 
 

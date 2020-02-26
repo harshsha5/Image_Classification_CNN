@@ -11,8 +11,10 @@ import sklearn.metrics
 
 import torch
 from torch.utils.data import DataLoader
+import torch.nn.functional as F
 import torch
 import ipdb
+import copy
 
 def parse_args():
     """
@@ -103,23 +105,27 @@ def eval_dataset_map(model, device, test_loader):
     """
     with torch.no_grad():
         count = 0
+        total_test_loss = 0
         for data, target, wgt in test_loader:
             ## TODO insert your code here
             data, target, wgt = data.to(device), target.to(device), wgt.to(device)
+            output = model(data)
+            total_test_loss += F.multilabel_soft_margin_loss(output,wgt*target)
             if(count==0):
                 gt = np.clip(target, 0, 1).numpy()
-                pred = torch.sigmoid(model(data)).numpy() #Use sigmoid here, as each output tensor would be a logit whose probability we need. The probability might
+                pred = torch.sigmoid(output).numpy() #Use sigmoid here, as each output tensor would be a logit whose probability we need. The probability might
                                               #not sum to 1 as this is multi-label classification and each probab is independent of other classes
                 valid = wgt.numpy()
             else:
                 gt = np.vstack((gt,np.clip(target, 0, 1).numpy()))
-                pred = np.vstack((pred,torch.sigmoid(model(data).numpy())))
+                pred = np.vstack((pred,torch.sigmoid(output.numpy())))
                 valid = np.vstack((valid,wgt.numpy()))
 
             count+=1
 
+    average_test_loss_per_iteration = total_test_loss/count
     AP = compute_ap(gt, pred, valid)
 
     mAP = np.mean(AP)
-    return AP, mAP
+    return AP, mAP, average_test_loss_per_iteration
 

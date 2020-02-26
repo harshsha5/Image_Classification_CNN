@@ -45,8 +45,10 @@ class VOCDataset(Dataset):
             self.im_size = 256
         elif(model_to_use==2):  #Caffe_Net
             self.im_size = 227
-        elif(model_to_use==3):
+        elif(model_to_use==3 or model_to_use==4):
             self.im_size = 224       #ResNet18 #Confirm it
+        else:
+            print("Incorrect model_to_use input. Check model_to_use argument again")
 
         self.transform_list = [transforms.RandomResizedCrop(self.im_size),transforms.RandomHorizontalFlip(p=0.3),
                                 transforms.RandomVerticalFlip(p=0.3)]   # transforms.Pad(0) can be added to ensure no transformation is selected as well
