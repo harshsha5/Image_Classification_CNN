@@ -121,6 +121,8 @@ def main():
                 writer.add_scalar('Train/Loss', loss, cnt)
                 current_lr = get_lr(copy.deepcopy(optimizer))
                 writer.add_scalar('lr', current_lr, cnt)
+                if(args.model_to_use==3 or args.model_to_use==4):
+                    writer.add_histogram('Resnet_Conv1', model.conv1.weight.grad, cnt)
             # Validation iteration
             if cnt % args.val_every == 0:
                 model.eval()

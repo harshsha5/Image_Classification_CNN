@@ -14,7 +14,6 @@ from torch.utils.data import DataLoader
 import torch.nn.functional as F
 import torch
 import ipdb
-import copy
 
 def parse_args():
     """
