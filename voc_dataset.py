@@ -42,16 +42,16 @@ class VOCDataset(Dataset):
 
         #This fixes the output of the transform based on the input size of the network!
         if(model_to_use==1):    #Simple_CNN
-            im_size = 256
+            self.im_size = 256
         elif(model_to_use==2):  #Caffe_Net
-            im_size = 227
+            self.im_size = 227
         elif(model_to_use==3):
-            im_size = 224       #ResNet18 #Confirm it
+            self.im_size = 224       #ResNet18 #Confirm it
 
-        self.transform_list = [transforms.RandomResizedCrop(im_size),transforms.RandomHorizontalFlip(p=0.3),
+        self.transform_list = [transforms.RandomResizedCrop(self.im_size),transforms.RandomHorizontalFlip(p=0.3),
                                 transforms.RandomVerticalFlip(p=0.3)]   # transforms.Pad(0) can be added to ensure no transformation is selected as well
         self.train_transform = transforms.RandomChoice(self.transform_list)
-        self.test_transform = transforms.CenterCrop(im_size)
+        self.test_transform = transforms.CenterCrop(self.im_size)
 
     @classmethod
     def get_class_name(cls, index):
