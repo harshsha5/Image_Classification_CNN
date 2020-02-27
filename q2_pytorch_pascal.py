@@ -22,6 +22,7 @@ import time
 from torchvision.utils import make_grid
 from torchvision import models
 import copy
+from sklearn import manifold
 
 def visualize_data_sample(tensor_img):
     tensor_img = tensor_img.int()
@@ -39,6 +40,27 @@ def visualize_filter(kernels,epoch,path):
 def get_lr(optimizer):
     for param_group in optimizer.param_groups:
         return param_group['lr']
+
+fc7_output = []
+def hook(module, input, output2):
+    fc7_output.append(output2)
+
+def get_nearest_neighbors(num_images,num_neighbors,intermediate_output):
+    '''
+    num_images: Number of images whose neighbors you wish to compute
+    num_neighbors: Number of neighbors you wish to compute
+    intermediate_output(N X layer_length Tensor): The intermediate tensor output from the network
+
+    Returns: Dictionary mapping the image with it's nearest neighbors
+    '''
+    dicto = {}
+    l2_dist = nn.PairwiseDistance(p=2)
+    for i in range(num_images):
+        normed_distance = l2_dist(intermediate_output, intermediate_output[i].view(1,-1).repeat(intermediate_output.shape[0],1))
+        res, ind = torch.topk(normed_distance,num_neighbors+1,largest=False)
+        ind = ind[1:]      #Removing self as the closest neighbor
+        dicto[i] = ind
+    return dicto
 
 def main():
     # TODO:  Initialize your visualizer here!
@@ -62,6 +84,10 @@ def main():
     elif(int(args.model_to_use)==2):
         model = CaffeNet(num_classes=len(VOCDataset.CLASS_NAMES), inp_size=64, c_dim=3,dropout_prob=0.5).to(device)
         MODEL_SAVE_PATH = "../Saved_Models/trained_CaffeNet"
+
+        '''Uncomment for T-SNE'''
+        # model.fc2.register_forward_hook(hook)
+
         print("Using CaffeNet")
     elif(int(args.model_to_use)==3):
         model = models.resnet18(pretrained=False)
@@ -150,9 +176,27 @@ def main():
             visualize_filter(kernels,epoch,MODEL_SAVE_PATH)
             writer.add_image('Train_Images_'+str(epoch)+'_1', data[0])            #Uncomment for ResNet Question
 
+    if(int(args.model_to_use)==2):
+        model.fc2.register_forward_hook(hook)
+        print("Registered hook to model.fc2 for Caffe_Net")     #Change this hook appropriately based on the question
     # Validation iteration
-    test_loader = utils.get_data_loader('voc', train=False, batch_size=args.test_batch_size, split='test')
+    test_loader = utils.get_data_loader('voc', train=False, batch_size=args.test_batch_size, split='test',model_to_use = int(args.model_to_use))
     ap, map, avg_test_loss= utils.eval_dataset_map(model, device, test_loader)
+
+    '''TODO: For T-SNE part'''
+    # if(int(args.model_to_use)==2):
+    #     tsne = manifold.TSNE(n_components=2, init='random', perplexity=10)
+    #     trans_data = tsne.fit_transform(fc7_output[-1])
+    #     plt.figure()
+    #     ax = plt.subplot(111)
+    #     plt.scatter(trans_data[0], trans_data[1], cmap=plt.cm.rainbow)
+    #     plt.show()
+
+    num_images = 3
+    num_neighbors = 3
+    assert(len(fc7_output)==1)          #This might throw an error: make sure output is a single tensor 
+    dicto = get_nearest_neighbors(num_images,num_neighbors,fc7_output[0])
+    #See how to convert these indices into images now!
 
     print('----test-----')
     print(ap)
