@@ -112,10 +112,9 @@ def main():
     model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=args.gamma)
+    #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=args.gamma)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min',factor=0.01,patience = 2,verbose=True)
     cnt = 0
-    min_test_loss = torch.tensor([10000])
-    test_loss_increase_threshold = torch.tensor([0.045])
 
     #Model Save Code        #Get 5 checkpoints
     model_save_epochs = np.linspace(0,args.epochs-1, num=5, endpoint=True,dtype=int)
@@ -157,15 +156,10 @@ def main():
                 ap, map, avg_test_loss = utils.eval_dataset_map(model, device, test_loader)
                 writer.add_scalar('MAP', map, cnt)
                 writer.add_scalar('Average_Test_Loss', avg_test_loss, cnt)
-                if(avg_test_loss>min_test_loss+test_loss_increase_threshold):
-                    print("Halving Learning Rate")
-                    for param_group in optimizer.param_groups:
-                        param_group['lr'] = param_group['lr']/2
-                if(min_test_loss>avg_test_loss):
-                    min_test_loss = avg_test_loss
+                scheduler.step(avg_test_loss)
                 model.train()
             cnt += 1
-        scheduler.step()
+        #scheduler.step()
 
         if(model_save_epochs[index_model_save_epochs] == epoch):
             print("Saving Model ",epoch)
