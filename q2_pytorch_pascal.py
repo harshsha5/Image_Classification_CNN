@@ -183,6 +183,11 @@ def main():
     test_loader = utils.get_data_loader('voc', train=False, batch_size=args.test_batch_size, split='test',model_to_use = int(args.model_to_use))
     ap, map, avg_test_loss= utils.eval_dataset_map(model, device, test_loader)
 
+    print('----test-----')
+    print(ap)
+    print('mAP: ', map)
+    print('Average_Test_Loss: ', avg_test_loss)
+
     '''TODO: For T-SNE part'''
     # if(int(args.model_to_use)==2):
     #     tsne = manifold.TSNE(n_components=2, init='random', perplexity=10)
@@ -194,16 +199,10 @@ def main():
 
     num_images = 3
     num_neighbors = 3
-    ipdb.set_trace()
     if(int(args.model_to_use)==2):
         assert(len(fc7_output)==1)          #This might throw an error: make sure output is a single tensor 
         dicto = get_nearest_neighbors(num_images,num_neighbors,fc7_output[0])
     #See how to convert these indices into images now!
-
-    print('----test-----')
-    print(ap)
-    print('mAP: ', map)
-    print('Average_Test_Loss: ', avg_test_loss)
     writer.close()
 
 

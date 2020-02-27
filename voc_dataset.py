@@ -27,7 +27,7 @@ class VOCDataset(Dataset):
     for i in range(len(CLASS_NAMES)):
         INV_CLASS[CLASS_NAMES[i]] = i
 
-    def __init__(self, split, size, model_to_use,data_dir='../VOCdevkit_Toy/VOC2007/'):
+    def __init__(self, split, size, model_to_use,data_dir='../VOCdevkit/VOC2007/'):
         super().__init__()
         self.split = split
         self.data_dir = data_dir
@@ -50,8 +50,8 @@ class VOCDataset(Dataset):
         else:
             print("Incorrect model_to_use input. Check model_to_use argument again")
 
-        self.transform_list = [transforms.RandomResizedCrop(self.im_size),transforms.RandomHorizontalFlip(p=0.3),
-                                transforms.RandomVerticalFlip(p=0.3)]   # transforms.Pad(0) can be added to ensure no transformation is selected as well
+        self.transform_list = [transforms.RandomResizedCrop(self.im_size),transforms.RandomHorizontalFlip(p=0.6),
+                                transforms.RandomVerticalFlip(p=0.6)]   # transforms.Pad(0) can be added to ensure no transformation is selected as well
         self.train_transform = transforms.RandomChoice(self.transform_list)
         self.test_transform = transforms.CenterCrop(self.im_size)
 
