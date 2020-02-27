@@ -45,6 +45,21 @@ fc7_output = []
 def hook(module, input, output2):
     fc7_output.append(output2)
 
+def get_all_indices(dicto):
+    '''
+    Extracts all unique indices from the Dictionary
+    Input:
+    dicto: Dictionary containing all the keys(as ints) and the values(as tensors). The keys here represent a sample image and the values represent it's nearest neighbors
+    Output:
+    A list of all unique elements in the dictionary
+    '''
+    x = set()
+    for key,value in dicto.items():
+        x.add(key)
+        for val in value:
+            x.add(val.item())
+    return list(x)
+
 def get_nearest_neighbors(num_images,num_neighbors,intermediate_output):
     '''
     num_images: Number of images whose neighbors you wish to compute
@@ -71,6 +86,13 @@ def main():
     # TODO: complete your dataloader in voc_dataset.py
     train_loader = utils.get_data_loader('voc', train=True, batch_size=args.batch_size, split='trainval',model_to_use = int(args.model_to_use))
     test_loader = utils.get_data_loader('voc', train=False, batch_size=args.test_batch_size, split='test',model_to_use = int(args.model_to_use))
+
+    dataiter = iter(train_loader)
+    for i in range(10):
+        images, labels, wgt = dataiter.next()
+        img_grid = make_grid(images)
+        plt.imshow(img_grid.permute(1, 2, 0).cpu().clone())
+        plt.show()
 
     # 2. define the model, and optimizer.
     # TODO: modify your model here!
@@ -199,12 +221,35 @@ def main():
     #     plt.scatter(trans_data[0], trans_data[1], cmap=plt.cm.rainbow)
     #     plt.show()
 
-    num_images = 3
-    num_neighbors = 3
+    '''Nearest Neighbor Analysis '''
     if(int(args.model_to_use)==2):
-        assert(len(fc7_output)==1)          #This might throw an error: make sure output is a single tensor 
-        dicto = get_nearest_neighbors(num_images,num_neighbors,fc7_output[0])
-    #See how to convert these indices into images now!
+        num_images = 3
+        num_neighbors = 3
+        intermediate_output = fc7_output[0]
+        for i in range(1,len(fc7_output)):
+            intermediate_output = torch.cat([intermediate_output, fc7_output[i]], dim=0)
+        dicto = get_nearest_neighbors(num_images,num_neighbors,intermediate_output)
+        sample_index_list = get_all_indices(dicto)
+
+        with torch.no_grad():
+            batch_count = 1
+            image_index_mapping = {}
+            for data, target, wgt in test_loader:
+                feasible_indices = [i for i in sample_index_list if (i < int(args.test_batch_size)*batch_count and i>=int(args.test_batch_size)*(batch_count-1))]
+                feasible_indices = [x - int(args.test_batch_size)*(batch_count-1) for x in feasible_indices]
+                for index in feasible_indices:
+                    image_index_mapping[index] = data[index] 
+                batch_count+=1
+
+            counter = 0
+            for key,val in dicto.items():
+                nearest_neighbors = torch.unsqueeze(image_index_mapping[key],0)    #See Size!
+                for elt in val:
+                    nearest_neighbors = torch.cat([nearest_neighbors, torch.unsqueeze(image_index_mapping[elt.item()],0)], dim=0)
+                img_grid = make_grid(nearest_neighbors)
+                plt.imshow(img_grid.permute(1, 2, 0).cpu().clone())
+                plt.show()
+                writer.add_image('Nearest_Neighbors_for_image'+str(counter), img_grid)
     writer.close()
 
 

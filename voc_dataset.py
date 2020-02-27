@@ -17,6 +17,7 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 import ipdb
 from PIL import Image
+from random import randint
 
 
 class VOCDataset(Dataset):
@@ -102,15 +103,16 @@ class VOCDataset(Dataset):
         """
         findex = self.index_list[index]
         fpath = os.path.join(self.img_dir, findex + '.jpg')
-        newsize = (256,256) 
+        # newsize = (256,256) 
+        newsize = (227,227) 
         # TODO: insert your code here. hint: read image, find the labels and weight.
         # img = io.imread(fpath)
         img = Image.open(fpath)
 
         if(self.split=='trainval'):
-            self.train_transform(img)
+            img = self.train_transform(img)
         else:
-            self.test_transform(img)
+            img = self.test_transform(img)
 
        # img = misc.imresize(img,newsize)
         img = np.asarray(img)
