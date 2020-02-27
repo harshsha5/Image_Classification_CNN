@@ -34,7 +34,7 @@ def visualize_filter(kernels,epoch,path):
     kernels = kernels - kernels.min()
     kernels = kernels / kernels.max()
     img = make_grid(kernels)
-    plt.imshow(img.permute(1, 2, 0))
+    plt.imshow(img.permute(1, 2, 0).cpu().clone())
     plt.savefig(path+'_'+str(epoch))
 
 def get_lr(optimizer):
@@ -194,8 +194,10 @@ def main():
 
     num_images = 3
     num_neighbors = 3
-    assert(len(fc7_output)==1)          #This might throw an error: make sure output is a single tensor 
-    dicto = get_nearest_neighbors(num_images,num_neighbors,fc7_output[0])
+    ipdb.set_trace()
+    if(int(args.model_to_use)==2):
+        assert(len(fc7_output)==1)          #This might throw an error: make sure output is a single tensor 
+        dicto = get_nearest_neighbors(num_images,num_neighbors,fc7_output[0])
     #See how to convert these indices into images now!
 
     print('----test-----')

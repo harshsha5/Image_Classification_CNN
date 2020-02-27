@@ -112,7 +112,9 @@ class VOCDataset(Dataset):
         else:
             self.test_transform(img)
 
-        img = misc.imresize(img,newsize)
+       # img = misc.imresize(img,newsize)
+        img = np.asarray(img)
+        img = transform.resize(img, newsize)
         lab_vec = self.anno_list[index][0]
         wgt_vec = self.anno_list[index][1]
         img = torch.FloatTensor(img)

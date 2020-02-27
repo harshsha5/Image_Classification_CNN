@@ -111,14 +111,16 @@ def eval_dataset_map(model, device, test_loader):
             output = model(data)
             total_test_loss += F.multilabel_soft_margin_loss(output,wgt*target)
             if(count==0):
-                gt = np.clip(target, 0, 1).numpy()
-                pred = torch.sigmoid(output).numpy() #Use sigmoid here, as each output tensor would be a logit whose probability we need. The probability might
+                gt = np.clip(target.cpu().clone().numpy(), 0, 1)
+                pred = torch.sigmoid(output)
+                #Use sigmoid here, as each output tensor would be a logit whose probability we need. The probability might
                                               #not sum to 1 as this is multi-label classification and each probab is independent of other classes
-                valid = wgt.numpy()
+                pred = pred.cpu().clone().numpy()
+                valid = wgt.cpu().clone().numpy()
             else:
-                gt = np.vstack((gt,np.clip(target, 0, 1).numpy()))
-                pred = np.vstack((pred,torch.sigmoid(output.numpy())))
-                valid = np.vstack((valid,wgt.numpy()))
+                gt = np.vstack((gt,np.clip(target.cpu().clone().numpy(), 0, 1)))
+                pred = np.vstack((pred,torch.sigmoid(output).cpu().clone().numpy()))
+                valid = np.vstack((valid,wgt.cpu().clone().numpy()))
 
             count+=1
 
