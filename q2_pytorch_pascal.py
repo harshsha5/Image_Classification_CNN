@@ -87,13 +87,6 @@ def main():
     train_loader = utils.get_data_loader('voc', train=True, batch_size=args.batch_size, split='trainval',model_to_use = int(args.model_to_use))
     test_loader = utils.get_data_loader('voc', train=False, batch_size=args.test_batch_size, split='test',model_to_use = int(args.model_to_use))
 
-    dataiter = iter(train_loader)
-    for i in range(10):
-        images, labels, wgt = dataiter.next()
-        img_grid = make_grid(images)
-        plt.imshow(img_grid.permute(1, 2, 0).cpu().clone())
-        plt.show()
-
     # 2. define the model, and optimizer.
     # TODO: modify your model here!
     # bad idea of use simple CNN, but let's give it a shot!
@@ -135,7 +128,7 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
     #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=args.gamma)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min',factor=0.01,patience = 2,verbose=True)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min',factor=0.1,patience = 2,verbose=True)
     cnt = 0
 
     #Model Save Code        #Get 5 checkpoints
@@ -204,6 +197,7 @@ def main():
         model.fc2.register_forward_hook(hook)
         print("Registered hook to model.fc2 for Caffe_Net")     #Change this hook appropriately based on the question
     # Validation iteration
+    model.eval()
     test_loader = utils.get_data_loader('voc', train=False, batch_size=args.test_batch_size, split='test',model_to_use = int(args.model_to_use))
     ap, map, avg_test_loss= utils.eval_dataset_map(model, device, test_loader)
 
@@ -238,7 +232,7 @@ def main():
                 feasible_indices = [i for i in sample_index_list if (i < int(args.test_batch_size)*batch_count and i>=int(args.test_batch_size)*(batch_count-1))]
                 feasible_indices = [x - int(args.test_batch_size)*(batch_count-1) for x in feasible_indices]
                 for index in feasible_indices:
-                    image_index_mapping[index] = data[index] 
+                    image_index_mapping[index+int(args.test_batch_size)*(batch_count-1)] = data[index] 
                 batch_count+=1
 
             counter = 0
@@ -247,9 +241,10 @@ def main():
                 for elt in val:
                     nearest_neighbors = torch.cat([nearest_neighbors, torch.unsqueeze(image_index_mapping[elt.item()],0)], dim=0)
                 img_grid = make_grid(nearest_neighbors)
-                plt.imshow(img_grid.permute(1, 2, 0).cpu().clone())
-                plt.show()
+                #plt.imshow(img_grid.permute(1, 2, 0).cpu().clone())
+                #plt.show()
                 writer.add_image('Nearest_Neighbors_for_image'+str(counter), img_grid)
+                counter+=1
     writer.close()
 
 
