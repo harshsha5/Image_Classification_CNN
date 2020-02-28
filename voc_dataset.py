@@ -52,9 +52,11 @@ class VOCDataset(Dataset):
             print("Incorrect model_to_use input. Check model_to_use argument again")
 
         self.transform_list = [transforms.RandomResizedCrop(self.im_size),transforms.RandomHorizontalFlip(p=0.6),
-                                transforms.RandomVerticalFlip(p=0.6)]   # transforms.Pad(0) can be added to ensure no transformation is selected as well
-        self.train_transform = transforms.RandomChoice(self.transform_list)
-        self.test_transform = transforms.CenterCrop(self.im_size)
+                                transforms.RandomVerticalFlip(p=0.6)]
+        self.train_transform = transforms.Compose([transforms.RandomChoice(self.transform_list),transforms.ToTensor(),transforms.Normalize(mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]),transforms.ToPILImage()])
+        self.test_transform = transforms.Compose([transforms.CenterCrop(self.im_size),transforms.ToTensor(),transforms.Normalize(mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225]),transforms.ToPILImage()])
 
     @classmethod
     def get_class_name(cls, index):
@@ -104,7 +106,7 @@ class VOCDataset(Dataset):
         findex = self.index_list[index]
         fpath = os.path.join(self.img_dir, findex + '.jpg')
         # newsize = (256,256) 
-        newsize = (227,227) 
+        newsize = (224,224)
         # TODO: insert your code here. hint: read image, find the labels and weight.
         # img = io.imread(fpath)
         img = Image.open(fpath)
@@ -113,7 +115,6 @@ class VOCDataset(Dataset):
             img = self.train_transform(img)
         else:
             img = self.test_transform(img)
-
        # img = misc.imresize(img,newsize)
         img = np.asarray(img)
         img = transform.resize(img, newsize)

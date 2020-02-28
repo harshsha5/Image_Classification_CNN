@@ -77,6 +77,14 @@ def get_nearest_neighbors(num_images,num_neighbors,intermediate_output):
         dicto[i] = ind
     return dicto
 
+def visualize_data_loader_images(dataloader1):
+    dataiter = iter(dataloader1)
+    for i in range(5):
+        images,labels,wgt = dataiter.next()
+        img_grid = make_grid(images)
+        plt.imshow(img_grid.permute(1, 2, 0).cpu().clone())
+        plt.show()
+
 def main():
     # TODO:  Initialize your visualizer here!
     timestr = time.strftime("%Y%m%d-%H%M%S")
