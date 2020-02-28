@@ -28,7 +28,7 @@ class VOCDataset(Dataset):
     for i in range(len(CLASS_NAMES)):
         INV_CLASS[CLASS_NAMES[i]] = i
 
-    def __init__(self, split, size, model_to_use,data_dir='../VOCdevkit/VOC2007/'):
+    def __init__(self, split, size, model_to_use,data_dir='../VOCdevkit_Toy/VOC2007/'):
         super().__init__()
         self.split = split
         self.data_dir = data_dir
@@ -51,12 +51,14 @@ class VOCDataset(Dataset):
         else:
             print("Incorrect model_to_use input. Check model_to_use argument again")
 
+        # self.train_transform = transforms.Compose([transforms.RandomChoice(self.transform_list),transforms.ToTensor(),transforms.Normalize(mean=[0.485, 0.456, 0.406],
+        #     std=[0.229, 0.224, 0.225]),transforms.ToPILImage()])
+        # self.test_transform = transforms.Compose([transforms.CenterCrop(self.im_size),transforms.ToTensor(),transforms.Normalize(mean=[0.485, 0.456, 0.406],
+        #     std=[0.229, 0.224, 0.225]),transforms.ToPILImage()])
         self.transform_list = [transforms.RandomResizedCrop(self.im_size),transforms.RandomHorizontalFlip(p=0.6),
                                 transforms.RandomVerticalFlip(p=0.6)]
-        self.train_transform = transforms.Compose([transforms.RandomChoice(self.transform_list),transforms.ToTensor(),transforms.Normalize(mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]),transforms.ToPILImage()])
-        self.test_transform = transforms.Compose([transforms.CenterCrop(self.im_size),transforms.ToTensor(),transforms.Normalize(mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225]),transforms.ToPILImage()])
+        self.train_transform = transforms.RandomChoice(self.transform_list)
+        self.test_transform = transforms.CenterCrop(self.im_size)
 
     @classmethod
     def get_class_name(cls, index):
