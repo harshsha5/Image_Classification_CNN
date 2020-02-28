@@ -194,10 +194,13 @@ def main():
             }, MODEL_SAVE_PATH)
             index_model_save_epochs+=1
 
-        if(filter_visualization_epochs[index_filter_visualization_epochs] == epoch):        #Filters are only needed for CaffeNet so can be commented for Resnet and SimpleCNN
+        if(filter_visualization_epochs[index_filter_visualization_epochs] == epoch and int(args.model_to_use)==2):        #Filters are only needed for CaffeNet so can be commented for Resnet and SimpleCNN
             print("Extracting Filter",epoch)
             index_filter_visualization_epochs+=1
-            kernels = model.conv1.weight.detach().clone()
+            # kernels = model.conv1.weight.clone()
+            kernels = model.conv1.weight.data.numpy()
+            kernels = torch.from_numpy(kernels)
+            # kernels = model.conv1.weight.detach().clone()
             visualize_filter(kernels,epoch,MODEL_SAVE_PATH)
             writer.add_image('Train_Images_'+str(epoch)+'_1', data[0])            #Uncomment for ResNet Question
 

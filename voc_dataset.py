@@ -28,7 +28,7 @@ class VOCDataset(Dataset):
     for i in range(len(CLASS_NAMES)):
         INV_CLASS[CLASS_NAMES[i]] = i
 
-    def __init__(self, split, size, model_to_use,data_dir='../VOCdevkit_Toy/VOC2007/'):
+    def __init__(self, split, size, model_to_use,data_dir='../VOCdevkit/VOC2007/'):
         super().__init__()
         self.split = split
         self.data_dir = data_dir
@@ -108,7 +108,7 @@ class VOCDataset(Dataset):
         findex = self.index_list[index]
         fpath = os.path.join(self.img_dir, findex + '.jpg')
         # newsize = (256,256) 
-        newsize = (224,224)
+        newsize = (227,227)
         # TODO: insert your code here. hint: read image, find the labels and weight.
         # img = io.imread(fpath)
         img = Image.open(fpath)
