@@ -198,7 +198,7 @@ def main():
             print("Extracting Filter",epoch)
             index_filter_visualization_epochs+=1
             # kernels = model.conv1.weight.clone()
-            kernels = model.conv1.weight.data.numpy()
+            kernels = model.conv1.weight.data.cpu().numpy()
             kernels = torch.from_numpy(kernels)
             # kernels = model.conv1.weight.detach().clone()
             visualize_filter(kernels,epoch,MODEL_SAVE_PATH)
