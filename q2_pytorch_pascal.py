@@ -196,6 +196,9 @@ def main():
     if(int(args.model_to_use)==2):
         model.fc2.register_forward_hook(hook)
         print("Registered hook to model.fc2 for Caffe_Net")     #Change this hook appropriately based on the question
+    elif(int(args.model_to_use)==4):
+        model.avgpool.register_forward_hook(hook)
+        print("Registered hook to model.avgpool for pretrained ResNet")     #Change this hook appropriately based on the question        
     # Validation iteration
     model.eval()
     test_loader = utils.get_data_loader('voc', train=False, batch_size=args.test_batch_size, split='test',model_to_use = int(args.model_to_use))
@@ -216,12 +219,12 @@ def main():
     #     plt.show()
 
     '''Nearest Neighbor Analysis '''
-    if(int(args.model_to_use)==2):
+    if(int(args.model_to_use)==2 or int(args.model_to_use)==4):
         num_images = 3
         num_neighbors = 3
-        intermediate_output = fc7_output[0]
+        intermediate_output = torch.squeeze(fc7_output[0])
         for i in range(1,len(fc7_output)):
-            intermediate_output = torch.cat([intermediate_output, fc7_output[i]], dim=0)
+            intermediate_output = torch.cat([intermediate_output, torch.squeeze(fc7_output[i])], dim=0)
         dicto = get_nearest_neighbors(num_images,num_neighbors,intermediate_output)
         sample_index_list = get_all_indices(dicto)
 
@@ -241,8 +244,8 @@ def main():
                 for elt in val:
                     nearest_neighbors = torch.cat([nearest_neighbors, torch.unsqueeze(image_index_mapping[elt.item()],0)], dim=0)
                 img_grid = make_grid(nearest_neighbors)
-                #plt.imshow(img_grid.permute(1, 2, 0).cpu().clone())
-                #plt.show()
+                # plt.imshow(img_grid.permute(1, 2, 0).cpu().clone())
+                # plt.show()
                 writer.add_image('Nearest_Neighbors_for_image'+str(counter), img_grid)
                 counter+=1
     writer.close()
