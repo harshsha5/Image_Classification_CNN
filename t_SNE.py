@@ -52,6 +52,9 @@ def main():
         intermediate_output = torch.cat([intermediate_output, torch.squeeze(fc7_output[i])], dim=0)
 
     #Add t-SNE code here
+    intermediate_output = intermediate_output.numpy()
+    intermediate_output_embedded = manifold.TSNE(n_components=2).fit_transform(intermediate_output)
+
 
 if __name__ == '__main__':
     args, device = utils.parse_args()
