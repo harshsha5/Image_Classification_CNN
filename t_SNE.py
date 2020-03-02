@@ -49,13 +49,12 @@ def main():
 
     intermediate_output = torch.squeeze(fc7_output[0])
     NUM_IMAGES_TO_MAKE_TSNE = 1000
-    for i in range(1,len(fc7_output)):                      #Change this to 1000 
-        intermediate_output = torch.cat([intermediate_output, torch.squeeze(fc7_output[i])], dim=0)
+    assert(int(args.test_batch_size)==NUM_IMAGES_TO_MAKE_TSNE)
     # ipdb.set_trace()
     dataiter = iter(test_loader)
     images,labels,wgt = dataiter.next()
 
-    assert(labels.shape[0]==100)   #Make sure that the test batch size is 1000
+    assert(labels.shape[0]==1000)   #Make sure that the test batch size is 1000
 
     #Add t-SNE code here
     intermediate_output = intermediate_output.cpu().numpy()
@@ -96,6 +95,7 @@ def main():
     #    ('Low Outlier', 'LoLo', 'Lo', 'Average', 'Hi', 'HiHi', 'High Outlier'),
     #    scatterpoints=1,loc='upper right',title="Classes",ncol=4,fontsize=8)
     plt.savefig("t-sne visualization")
+    print("t-SNE visualization saved")
     plt.show()
 
 
