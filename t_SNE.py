@@ -48,12 +48,42 @@ def main():
     print('Average_Test_Loss: ', avg_test_loss)
 
     intermediate_output = torch.squeeze(fc7_output[0])
-    for i in range(1,len(fc7_output)):
+    NUM_IMAGES_TO_MAKE_TSNE = 1000
+    for i in range(1,len(fc7_output)):                      #Change this to 1000 
         intermediate_output = torch.cat([intermediate_output, torch.squeeze(fc7_output[i])], dim=0)
+    # ipdb.set_trace()
+    dataiter = iter(test_loader)
+    images,labels,wgt = dataiter.next()
+
+    assert(labels.shape[0]==11)   #Make sure that the test batch size is 1000
 
     #Add t-SNE code here
-    intermediate_output = intermediate_output.numpy()
+    intermediate_output = intermediate_output.cpu().numpy()
     intermediate_output_embedded = manifold.TSNE(n_components=2).fit_transform(intermediate_output)
+
+    # colors = ["black","grey","lightcoral","red","saddlebrown","darkorange","gold","olivedrab","lawngreen","turquoise",
+    #             "deepskyblue","royalblue","blue","indigo","magenta","crimson","orangered","goldenrod","steelblue","springgreen"]
+    colors = [(0.3,0.3,0.5),(0.1,0.2,0.3),(0.2,0.1,0.5),(0.1,0.6,0.6),(0.9,0.3,0.1),(0.8,0.2,0.2),(0.4,0.4,0.4),(0.1,0.7,0.6),(0.2,0.8,0.5),(0.1,0.6,0.1),
+                (0,0.1,0.4),(0.5,0.5,0),(0.6,0,0.5),(0.2,0.4,0.9),(0,0,0.9),(0.2,0.3,0.6),(0.9,0.5,0.5),(0.7,0.8,0.9),(0.2,0.1,0.1),(0.9,0.5,0.1)]
+    for row in range(intermediate_output_embedded.shape[0]):
+        im_label_vector = labels[row].cpu().numpy()
+        positive_labels = np.argwhere(im_label_vector==1).flatten()
+
+        total_r,total_g,total_b = 0,0,0
+        for i,elt in enumerate(positive_labels):
+            total_r+= colors[positive_labels[i]][0]
+            total_g+= colors[positive_labels[i]][1]
+            total_b+= colors[positive_labels[i]][2]
+
+        avg_r,avg_g,avg_b = total_r/i, total_g/i, total_b/i
+        color_array = np.array([[avg_r,avg_g,avg_b ]])
+        ipdb.set_trace()
+        # plt.scatter(intermediate_output_embedded[0], intermediate_output_embedded[1], c=(avg_r,avg_g,avg_b))
+        plt.scatter(intermediate_output_embedded[0], intermediate_output_embedded[1], c=color_array)
+        plt.xlabel("Dim_1")
+        plt.ylabel("Dim_2")
+        plt.legend(loc='upper left')
+    plt.show()
 
 
 if __name__ == '__main__':
