@@ -108,7 +108,7 @@ class VOCDataset(Dataset):
         findex = self.index_list[index]
         fpath = os.path.join(self.img_dir, findex + '.jpg')
         # newsize = (256,256) 
-        newsize = (227,227)
+        newsize = (224,224)
         # TODO: insert your code here. hint: read image, find the labels and weight.
         # img = io.imread(fpath)
         img = Image.open(fpath)

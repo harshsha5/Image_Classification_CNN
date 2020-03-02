@@ -85,6 +85,22 @@ def visualize_data_loader_images(dataloader1):
         plt.imshow(img_grid.permute(1, 2, 0).cpu().clone())
         plt.show()
 
+def mixup_data(x, y, wgt,alpha=1.0, device = torch.device("cuda")):
+    #Code Referenced from https://github.com/facebookresearch/mixup-cifar10/blob/master/train.py
+    '''Returns mixed inputs, pairs of targets, and lambda'''
+    if alpha > 0:
+        lam = np.random.beta(alpha, alpha)
+    else:
+        lam = 1
+
+    batch_size = x.size()[0]
+    index = torch.randperm(batch_size).to(device)
+
+    mixed_x = lam * x + (1 - lam) * x[index, :]
+    y_a, y_b = y, y[index]
+    wgt_a,wgt_b = wgt,wgt[index]
+    return mixed_x, y_a, y_b, wgt_a, wgt_b,lam
+
 def main():
     # TODO:  Initialize your visualizer here!
     timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -136,7 +152,7 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
     #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=args.gamma)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min',factor=0.1,patience = 2,verbose=True)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min',factor=0.3,patience = 2,verbose=True)
     cnt = 0
 
     #Model Save Code        #Get 5 checkpoints
@@ -152,13 +168,19 @@ def main():
         for batch_idx, (data, target, wgt) in enumerate(train_loader):
             # Get a batch of data
             data, target, wgt = data.to(device), target.to(device), wgt.to(device)
+            if(int(args.use_mixup)==1):
+                data, targets_a, targets_b, wgt_a, wgt_b, lam = mixup_data(data, target,wgt,args.alpha, device)
+
             # visualize_data_sample(data[0])
             optimizer.zero_grad()
             # Forward pass
             output = model(data)
             # Calculate the loss
             # TODO: your loss for multi-label clf?
-            loss = F.multilabel_soft_margin_loss(output,wgt*target)
+            if(int(args.use_mixup)==1):
+                loss = lam*F.multilabel_soft_margin_loss(output,wgt_a*targets_a) + (1-lam)*F.multilabel_soft_margin_loss(output,wgt_b*targets_b)
+            else:
+                loss = F.multilabel_soft_margin_loss(output,wgt*target)
             # Calculate gradient w.r.t the loss
             loss.backward()
             # Optimizer takes one step

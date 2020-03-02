@@ -42,6 +42,10 @@ def parse_args():
                         help='For Saving the current Model')
     parser.add_argument('--model_to_use', type=int, default=1, metavar='NI',            #1 for SimpleCNN #2 for CaffeNet #3 for Resnet
                         help='What model to use')
+    parser.add_argument('--use_mixup', type=int, default=0, metavar='NI',            #1 for SimpleCNN #2 for CaffeNet #3 for Resnet
+                        help='Do you wish to mixup data to increase generalisation')
+    parser.add_argument('--alpha', type=float, default=0.2, metavar='NI',            #1 for SimpleCNN #2 for CaffeNet #3 for Resnet
+                        help='Alpha for mixup- helps to create lambda')
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
