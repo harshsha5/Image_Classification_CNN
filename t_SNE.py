@@ -47,13 +47,13 @@ def main():
     print('Average_Test_Loss: ', avg_test_loss)
 
     intermediate_output = torch.squeeze(fc7_output[0])
-    NUM_IMAGES_TO_MAKE_TSNE = 11
+    NUM_IMAGES_TO_MAKE_TSNE = 1000
     assert(int(args.test_batch_size)==NUM_IMAGES_TO_MAKE_TSNE)
 
     dataiter = iter(test_loader)
     images,labels,wgt = dataiter.next()
 
-    assert(labels.shape[0]==11)   #Make sure that the test batch size is 1000
+    assert(labels.shape[0]==NUM_IMAGES_TO_MAKE_TSNE)   #Make sure that the test batch size is 1000
 
     #Add t-SNE code here
     intermediate_output = intermediate_output.cpu().numpy()
